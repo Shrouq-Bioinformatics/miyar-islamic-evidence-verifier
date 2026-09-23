@@ -1,3 +1,5 @@
+import type { RetrievedEvidence } from "./evidence";
+
 export type VerifyResult = {
   status: "supported" | "needs_review" | "insufficient";
   confidence: number;
@@ -7,14 +9,17 @@ export type VerifyResult = {
   humanReviewReason: string;
   sourceIds: string[];
   sourceNotes: string[];
+  evidence: RetrievedEvidence[];
   analysisMode: "ai" | "local";
   modeNote: string;
 };
 
-type ProviderResult = Partial<Omit<VerifyResult, "analysisMode" | "modeNote">>;
+type ProviderResult = Partial<Omit<VerifyResult, "analysisMode" | "modeNote" | "evidence">>;
 
 const PRELIMINARY_LIMITATION =
-  "هذا فرز أولي غير مُتحقَّق: لم تُسترجع نصوص أو مقاطع خاصة بالمطالبة، وفهرس المصادر وحده لا يثبتها.";
+  "هذا فرز أولي مساعد للمراجعة: وجود المقتطف لا يغني عن مراجعة اللفظ والسياق بواسطة مختص.";
+const NO_EVIDENCE_LIMITATION =
+  "لم تُسترجع نصوص أو مقاطع خاصة بالمطالبة؛ ذكر المصدر وحده لا يثبتها.";
 
 function nonEmpty(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
@@ -60,14 +65,18 @@ export function localVerify(claim: string): VerifyResult {
         ? "ذِكر مصدر أو موضوع فقهي لا يعوض استرجاع النص وفحصه بواسطة مختص."
         : "لا يوجد دليل محدد كافٍ، ولا ينبغي بناء استنتاج ديني على فرز آلي.",
     sourceIds: [],
-    sourceNotes: [PRELIMINARY_LIMITATION],
+    sourceNotes: [NO_EVIDENCE_LIMITATION],
+    evidence: [],
     analysisMode: "local",
     modeNote:
       "فرز محلي أولي فقط: التحليل الذكي غير مستخدم، ولا توجد خدمة استرجاع مصادر متصلة.",
   };
 }
 
-export function normalizeProviderResult(input: unknown): VerifyResult {
+export function normalizeProviderResult(
+  input: unknown,
+  retrievedEvidence: RetrievedEvidence[] = [],
+): VerifyResult {
   const parsed =
     typeof input === "object" && input !== null ? (input as ProviderResult) : {};
   const providerStatus =
@@ -76,7 +85,13 @@ export function normalizeProviderResult(input: unknown): VerifyResult {
     parsed.status === "insufficient"
       ? parsed.status
       : "insufficient";
-  const status = providerStatus === "supported" ? "needs_review" : providerStatus;
+  const allowedEvidenceIds = new Set(retrievedEvidence.map((item) => item.id));
+  const evidenceIds = Array.isArray(parsed.sourceIds)
+    ? parsed.sourceIds.filter((id): id is string => typeof id === "string" && allowedEvidenceIds.has(id))
+    : [];
+  const status = providerStatus === "supported" && evidenceIds.length === 0
+    ? "needs_review"
+    : providerStatus;
   const providerSummary = nonEmpty(parsed.summary, "لم يقدم النموذج ملخصًا قابلًا للاستخدام.");
   const providerNotes = Array.isArray(parsed.sourceNotes)
     ? parsed.sourceNotes
@@ -87,24 +102,41 @@ export function normalizeProviderResult(input: unknown): VerifyResult {
 
   return {
     status,
-    confidence: 0,
-    evidenceLevel: "غير كافٍ",
-    summary: `ملخص أولي من النموذج: ${providerSummary} ${PRELIMINARY_LIMITATION}`,
+    confidence: retrievedEvidence.length
+      ? Math.max(0, Math.min(100, Math.round(typeof parsed.confidence === "number" ? parsed.confidence : 0)))
+      : 0,
+    evidenceLevel: retrievedEvidence.length &&
+      (parsed.evidenceLevel === "مرتفع" || parsed.evidenceLevel === "جزئي")
+      ? parsed.evidenceLevel
+      : "غير كافٍ",
+    summary: `ملخص أولي من النموذج: ${providerSummary} ${
+      retrievedEvidence.length ? PRELIMINARY_LIMITATION : NO_EVIDENCE_LIMITATION
+    }`,
     recommendedAction: nonEmpty(
       parsed.recommendedAction,
       "لا تعتمد النتيجة؛ استرجع النص المحدد وراجعه مع مختص قبل النشر.",
     ),
     humanReviewReason:
       providerStatus === "supported"
-        ? "اقترح النموذج أنها مدعومة، لكن أسماء المصادر وبيانات الفهرس ليست دليلًا خاصًا بالمطالبة؛ لذلك خُفّضت إلى تحتاج مراجعة."
+        ? "اقترح النموذج أنها مدعومة، وتوجد مقتطفات مسترجعة؛ خُفّضت دلالة النتيجة إلى اعتماد مشروط بمراجعة بشرية."
         : nonEmpty(
             parsed.humanReviewReason,
             "لا توجد نصوص مسترجعة مرتبطة بالمطالبة، وتحتاج النتيجة إلى مراجعة بشرية.",
           ),
-    sourceIds: [],
-    sourceNotes: [PRELIMINARY_LIMITATION, ...providerNotes],
+    sourceIds: [...new Set(
+      retrievedEvidence
+        .filter((item) => evidenceIds.includes(item.id))
+        .map((item) => item.sourceId),
+    )],
+    sourceNotes: [
+      ...providerNotes,
+      retrievedEvidence.length
+        ? `استُرجعت ${retrievedEvidence.length} مقتطفات قابلة للتتبع من فهرس الأدلة المحلي.`
+        : "لم تُسترجع مقتطفات مطابقة؛ لا يُسمح بتحويل اسم المصدر إلى دليل.",
+    ],
+    evidence: retrievedEvidence.filter((item) => evidenceIds.includes(item.id)),
     analysisMode: "ai",
     modeNote:
-      "استخدم النموذج للفرز الأولي فقط. الاتصال بمزود النموذج لا يعني اتصالًا بالمصادر، ولم تُقَس درجة ثقة علمية.",
+      "استخدم النموذج مع مقتطفات مسترجعة للفرز الأولي فقط. درجة الثقة تقدير غير مُعاير وليست نتيجة دقة علمية.",
   };
 }

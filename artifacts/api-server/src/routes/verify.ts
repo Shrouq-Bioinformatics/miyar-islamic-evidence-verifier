@@ -1,54 +1,15 @@
 import { Router, type IRouter } from "express";
 import { logger } from "../lib/logger";
 import {
-  localVerify,
   normalizeProviderResult,
 } from "../lib/verification";
+import { retrieveEvidence } from "../lib/evidence";
 
 type VerifyBody = {
   claim?: unknown;
   context?: unknown;
   language?: unknown;
 };
-
-const sourceCatalog = [
-  {
-    id: "quran",
-    title: "مصحف المدينة النبوية",
-    type: "نص قرآني",
-    coverage: "القرآن كاملًا",
-  },
-  {
-    id: "bukhari",
-    title: "صحيح البخاري",
-    type: "حديث",
-    coverage: "كتاب الجامع الصحيح",
-  },
-  {
-    id: "muslim",
-    title: "صحيح مسلم",
-    type: "حديث",
-    coverage: "كتاب الصحيح",
-  },
-  {
-    id: "altafsir",
-    title: "موسوعة التفسير بالمأثور",
-    type: "تفسير",
-    coverage: "السور والآيات",
-  },
-  {
-    id: "bin-baz",
-    title: "مجموع فتاوى ابن باز",
-    type: "فتوى",
-    coverage: "العبادات والمعاملات",
-  },
-  {
-    id: "fiqh-academy",
-    title: "قرارات مجمع الفقه الإسلامي",
-    type: "قرار فقهي",
-    coverage: "قضايا معاصرة مختارة",
-  },
-];
 
 const router: IRouter = Router();
 
@@ -66,9 +27,13 @@ const PROVIDER_TIMEOUT_MS = 12_000;
 router.get("/verify/status", (_req, res) => {
   res.json({
     service: "preliminary_triage",
-    providerConfigured: Boolean(process.env.OPENAI_API_KEY),
-    providerConnection: "not_checked",
-    sourceRetrievalConnected: false,
+    providerConfigured: Boolean(
+      process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+    ),
+    providerConnection: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+      ? "replit_managed_openai"
+      : "direct_openai",
+    sourceRetrievalConnected: true,
     canScientificallyVerify: false,
   });
 });
@@ -104,23 +69,31 @@ router.post("/verify", async (req, res): Promise<void> => {
     return;
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    logger.warn("OPENAI_API_KEY is not configured; using transparent local analysis");
-    res.json(localVerify(claim));
+  const aiKey =
+    process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+  const aiBaseUrl =
+    process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || "https://api.openai.com/v1";
+  if (!aiKey) {
+    logger.error("OPENAI_API_KEY is not configured; refusing to present local analysis as complete AI");
+    res.status(503).json({
+      error: "خدمة الذكاء الاصطناعي غير مهيأة. أضيفي مفتاح المزود قبل استخدام المسار الرسمي.",
+      code: "AI_NOT_CONFIGURED",
+    });
     return;
   }
 
+  const retrievedEvidence = retrieveEvidence(claim);
   const systemPrompt = [
     "أنت محرك فرز وتحقق أولي لمحتوى إسلامي. لا تصدر فتوى ولا تنسب حكمًا شرعيًا من عندك.",
-    "هذا فرز أولي فقط؛ فهرس المصادر ليس نصوصًا مسترجعة ولا يثبت أي ادعاء.",
-    "لا تختر supported مطلقًا لأنك لا تملك مقاطع خاصة بالمطالبة. اختر insufficient أو needs_review.",
+    "هذه المقتطفات هي الأدلة الوحيدة المسموح لك بإسناد النتيجة إليها. لا تخترع نصًا أو مرجعًا أو رابطًا.",
+    "اختر supported فقط إذا كانت المطالبة تطابق معنى مقتطف مسترجع مباشرة، مع بقاء المراجعة البشرية مطلوبة.",
     "اختر needs_review للمسائل الفقهية أو المعاصرة أو الحساسة، حتى لو وجدت إشارة جزئية.",
     "لا تستنتج تدين الشخص أو مذهبه أو أي سمة دينية حساسة.",
     "أعد JSON صالحًا فقط بالمفاتيح: status, confidence, evidenceLevel, summary, recommendedAction, humanReviewReason, sourceIds, sourceNotes.",
     'status يجب أن يكون supported أو needs_review أو insufficient.',
     "confidence رقم صحيح من 0 إلى 100. evidenceLevel إحدى: مرتفع، جزئي، غير كافٍ.",
-    "sourceIds يجب أن تكون من معرفات الفهرس المرفق فقط. لا تخترع مراجع أو أرقام صفحات أو روابط.",
-    "لا تعتبر اسم كتاب أو معرف مصدر إحالة مثبتة، ولا تدّع مطابقة نص لم يُسترجع.",
+    "sourceIds يجب أن تكون من معرفات المقتطفات المسترجعة فقط. لا تخترع مراجع أو أرقام صفحات أو روابط.",
+    "إذا لم توجد مطابقة مباشرة في الأدلة، اختر insufficient أو needs_review ولا تستخدم اسم الكتاب كدليل.",
     "اكتب الملخص والتوصية وسبب الإحالة بالعربية الواضحة حتى لو كانت لغة المطالبة مختلفة.",
   ].join("\n");
 
@@ -128,21 +101,21 @@ router.post("/verify", async (req, res): Promise<void> => {
     claim,
     context,
     language,
-    sourceCatalog,
+    retrievedEvidence,
   });
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(`${aiBaseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${aiKey}`,
         "Content-Type": "application/json",
       },
       signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: "gpt-5.4-mini",
         response_format: { type: "json_object" },
-        max_tokens: 900,
+        max_completion_tokens: 900,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -151,12 +124,13 @@ router.post("/verify", async (req, res): Promise<void> => {
     });
 
     if (!response.ok) {
+      const providerError = await response.text();
       if (response.status === 401 || response.status === 403) {
-        req.log.warn({ status: response.status }, "OpenAI credentials rejected; using transparent local analysis");
-        res.json(localVerify(claim));
+        req.log.error({ status: response.status }, "OpenAI credentials rejected");
+        res.status(502).json({ error: "رفض مزود الذكاء الاصطناعي بيانات الاعتماد؛ أصلحي إعداد المفتاح قبل المتابعة." });
         return;
       }
-      req.log.error({ status: response.status }, "OpenAI verification request failed");
+      req.log.error({ status: response.status, providerError: providerError.slice(0, 500) }, "OpenAI verification request failed");
       res.status(502).json({ error: "تعذر إكمال التحليل من مزود الذكاء الاصطناعي." });
       return;
     }
@@ -170,7 +144,7 @@ router.post("/verify", async (req, res): Promise<void> => {
       return;
     }
 
-    res.json(normalizeProviderResult(JSON.parse(content)));
+    res.json(normalizeProviderResult(JSON.parse(content), retrievedEvidence));
   } catch (error) {
     const timedOut =
       error instanceof Error &&

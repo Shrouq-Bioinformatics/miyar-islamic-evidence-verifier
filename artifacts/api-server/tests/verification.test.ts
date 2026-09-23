@@ -4,6 +4,7 @@ import {
   localVerify,
   normalizeProviderResult,
 } from "../src/lib/verification.ts";
+import { retrieveEvidence } from "../src/lib/evidence.ts";
 
 test("a fake Bukhari attribution is never treated as verified", () => {
   const result = localVerify("روى البخاري أن شرب القهوة بعد الفجر واجب");
@@ -59,4 +60,27 @@ test("provider summaries remain visible but explicitly preliminary", () => {
   });
   assert.match(result.summary, /ملخص أولي من النموذج: قد تكون المسألة محل خلاف/);
   assert.match(result.modeNote, /للفرز الأولي فقط/);
+});
+
+test("retrieval returns bounded, claim-specific evidence", () => {
+  const evidence = retrieveEvidence("ورد في صحيح البخاري أن الأعمال بالنيات.");
+  assert.equal(evidence[0]?.id, "bukhari-hadith-1");
+  assert.ok((evidence[0]?.score ?? 0) <= 1);
+  assert.ok(evidence[0]?.reference.includes("حديث 1"));
+  assert.ok(evidence[0]?.url.startsWith("https://"));
+});
+
+test("provider cannot cite evidence that was not retrieved", () => {
+  const evidence = retrieveEvidence("إنما الأعمال بالنيات");
+  const result = normalizeProviderResult(
+    {
+      status: "supported",
+      confidence: 90,
+      evidenceLevel: "مرتفع",
+      sourceIds: ["made-up-evidence-id", "bukhari-hadith-1"],
+    },
+    evidence,
+  );
+  assert.deepEqual(result.sourceIds, ["bukhari"]);
+  assert.deepEqual(result.evidence.map((item) => item.id), ["bukhari-hadith-1"]);
 });

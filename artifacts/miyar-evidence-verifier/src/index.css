@@ -531,6 +531,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .source-notes { margin-top: 15px; padding: 12px 14px; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--muted) / .28); color: hsl(var(--foreground)); font-size: 11px; line-height: 1.8; }
 .source-notes strong { display: block; margin-bottom: 4px; font-size: 12px; }
 .source-notes ul { margin: 0; padding-right: 17px; color: hsl(var(--muted-foreground)); }
+.evidence-snippet-list { display: grid; gap: 9px; }
+.evidence-snippet { border: 1px solid hsl(var(--primary) / .2); border-radius: 11px; padding: 12px 14px; background: hsl(var(--primary) / .035); }
+.evidence-snippet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.evidence-snippet-head strong { font-size: 11px; color: hsl(var(--foreground)); }
+.evidence-snippet p { margin: 8px 0 6px; color: hsl(var(--foreground)); font-family: var(--app-font-serif); font-size: 14px; line-height: 1.9; }
+.evidence-snippet small { color: hsl(var(--muted-foreground)); font-size: 10px; line-height: 1.6; }
 .recommended-action { display: flex; gap: 10px; align-items: center; margin-top: 14px; padding: 11px 13px; border-right: 3px solid hsl(var(--accent)); border-radius: 10px; background: hsl(var(--accent) / .09); font-size: 11px; line-height: 1.7; }
 .recommended-action strong { white-space: nowrap; color: hsl(var(--foreground)); }
 .recommended-action span { color: hsl(var(--muted-foreground)); }

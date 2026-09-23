@@ -48,6 +48,19 @@ type CaseStatus = 'supported' | 'needs_review' | 'insufficient';
 type Tone = 'success' | 'warning' | 'neutral';
 type ViewName = 'dashboard' | 'check' | 'reviews' | 'sources' | 'analytics' | 'settings';
 
+type RetrievedEvidence = {
+  id: string;
+  sourceId: string;
+  sourceTitle: string;
+  sourceType: string;
+  reference: string;
+  excerpt: string;
+  url: string;
+  edition: string;
+  retrievedAt: string;
+  score: number;
+};
+
 type EvidenceCase = {
   id: string;
   claim: string;
@@ -64,6 +77,7 @@ type EvidenceCase = {
   summary?: string;
   recommendedAction?: string;
   sourceNotes?: string[];
+  evidence?: RetrievedEvidence[];
   analysisMode?: 'ai' | 'local';
   modeNote?: string;
   isSample?: boolean;
@@ -322,13 +336,14 @@ function CheckPage({ cases, setCases, sources, selectedId, go, addActivity, noti
   const printCase = (item: EvidenceCase) => {
     const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character] || character);
     const sourceNames = item.sources.map((id) => sources.find((source) => source.id === id)?.title).filter(Boolean);
+    const evidenceText = item.evidence?.map((item) => `${item.reference}: ${item.excerpt}`).join('\n') || 'لا توجد مقتطفات مسترجعة.';
     const report = window.open('', '_blank');
     if (!report) {
       notify('تعذر فتح نافذة الطباعة. اسمحي بالنوافذ المنبثقة ثم حاولي مجددًا.');
       return;
     }
     report.opener = null;
-    report.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير مِعيار — ${escapeHtml(item.id)}</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;line-height:1.8;color:#172a26}h1{border-bottom:2px solid #b8954b;padding-bottom:12px}dt{font-weight:bold;margin-top:14px}dd{margin:0}.note{background:#f4f1e9;padding:12px;border-right:4px solid #b8954b}.muted{color:#66736f;font-size:13px}@media print{button{display:none}}</style></head><body><h1>تقرير حالة من مِعيار</h1><p class="muted">المعرّف: ${escapeHtml(item.id)}${item.isSample ? ' — حالة نموذجية للعرض' : ''}</p><dl><dt>المطالبة</dt><dd>${escapeHtml(item.claim)}</dd><dt>السياق</dt><dd>${escapeHtml(item.context)}</dd><dt>الحالة</dt><dd>${escapeHtml(statusLabel[item.status])}</dd><dt>مستوى الدليل</dt><dd>${escapeHtml(item.evidenceLevel)}</dd><dt>ملخص التحليل</dt><dd>${escapeHtml(item.summary || 'لا يوجد ملخص محفوظ.')}</dd><dt>مراجع الفهرس العامة</dt><dd>${sourceNames.length ? sourceNames.map((name) => escapeHtml(String(name))).join('، ') : 'لا توجد'}</dd></dl><p class="note">مراجع الفهرس العامة ليست إحالات تثبت المطالبة. هذا التقرير أداة تتبّع ولا يُعد فتوى أو تفويضًا بالنشر.</p><button onclick="window.print()">طباعة</button></body></html>`);
+     report.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير مِعيار — ${escapeHtml(item.id)}</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;line-height:1.8;color:#172a26}h1{border-bottom:2px solid #b8954b;padding-bottom:12px}dt{font-weight:bold;margin-top:14px}dd{margin:0}.note{background:#f4f1e9;padding:12px;border-right:4px solid #b8954b}.evidence{background:#f7faf8;padding:12px;margin:14px 0;border-right:4px solid #2e6b5d;white-space:pre-wrap}.muted{color:#66736f;font-size:13px}@media print{button{display:none}}</style></head><body><h1>تقرير حالة من مِعيار</h1><p class="muted">المعرّف: ${escapeHtml(item.id)}${item.isSample ? ' — حالة نموذجية للعرض' : ''}</p><dl><dt>المطالبة</dt><dd>${escapeHtml(item.claim)}</dd><dt>السياق</dt><dd>${escapeHtml(item.context)}</dd><dt>الحالة</dt><dd>${escapeHtml(statusLabel[item.status])}</dd><dt>مستوى الدليل</dt><dd>${escapeHtml(item.evidenceLevel)}</dd><dt>ملخص التحليل</dt><dd>${escapeHtml(item.summary || 'لا يوجد ملخص محفوظ.')}</dd><dt>المصادر</dt><dd>${sourceNames.length ? sourceNames.map((name) => escapeHtml(String(name))).join('، ') : 'لا توجد'}</dd></dl><div class="evidence"><strong>المقتطفات المسترجعة</strong><br />${escapeHtml(evidenceText)}</div><p class="note">المقتطفات المسترجعة تساعد على التتبع، لكنها لا تجعل التقرير فتوى أو اعتمادًا نهائيًا. يلزم فحص اللفظ والسياق بواسطة مختص.</p><button onclick="window.print()">طباعة</button></body></html>`);
     report.document.close();
   };
 
@@ -355,6 +370,7 @@ function CheckPage({ cases, setCases, sources, selectedId, go, addActivity, noti
         humanReviewReason?: string;
         sourceIds?: string[];
         sourceNotes?: string[];
+        evidence?: RetrievedEvidence[];
         analysisMode?: 'ai' | 'local';
         modeNote?: string;
       };
@@ -362,23 +378,29 @@ function CheckPage({ cases, setCases, sources, selectedId, go, addActivity, noti
         throw new Error(payload.error || 'تعذر إكمال التحليل.');
       }
       const effectiveStatus: CaseStatus = payload.analysisMode === 'local' ? 'needs_review' : payload.status;
-      const newCase: EvidenceCase = {
-        id: `case-${Date.now()}`,
-        claim: cleanClaim,
-        context,
-        language,
-        status: effectiveStatus,
-        confidence: payload.confidence ?? 0,
-        evidenceLevel: payload.evidenceLevel ?? 'غير كافٍ',
-        createdAt: new Date().toISOString(),
-        sources: payload.sourceIds ?? [],
-        sourceNotes: payload.sourceNotes ?? [],
-        analysisMode: payload.analysisMode,
-        modeNote: payload.modeNote,
-        summary: payload.summary,
-        recommendedAction: payload.recommendedAction,
-        reviewerNote: payload.humanReviewReason,
-      };
+       const saveResponse = await fetch('/api/cases', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+           claim: cleanClaim,
+           context,
+           language,
+           status: effectiveStatus,
+           confidence: payload.confidence ?? 0,
+           evidenceLevel: payload.evidenceLevel ?? 'غير كافٍ',
+           sources: payload.sourceIds ?? [],
+           sourceNotes: payload.sourceNotes ?? [],
+           evidence: payload.evidence ?? [],
+           analysisMode: payload.analysisMode,
+           modeNote: payload.modeNote,
+           summary: payload.summary,
+           recommendedAction: payload.recommendedAction,
+           reviewerNote: payload.humanReviewReason,
+         }),
+       });
+       const savedCase = await saveResponse.json() as EvidenceCase & { error?: string };
+       if (!saveResponse.ok) throw new Error(savedCase.error || 'تعذر حفظ نتيجة التحليل في مساحة الفريق.');
+       const newCase: EvidenceCase = savedCase;
       setCases((previous) => [newCase, ...previous]);
       setResult(newCase);
       go(`/check/${encodeURIComponent(newCase.id)}`);
@@ -403,9 +425,9 @@ function CheckPage({ cases, setCases, sources, selectedId, go, addActivity, noti
           <div className="field"><label htmlFor="context">السياق</label><select id="context" data-testid="select-context" value={context} onChange={(event) => setContext(event.target.value)}><option>محتوى دعوي</option><option>مادة تربوية</option><option>سؤال معاصر</option><option>منشور اجتماعي</option><option>بحث أكاديمي</option></select></div>
           <div className="field"><label htmlFor="language">اللغة</label><select id="language" data-testid="select-language" value={language} onChange={(event) => setLanguage(event.target.value)}><option>العربية</option><option>English</option><option>Français</option></select></div>
         </div>
-        <div className="notice notice-warn" style={{ marginBottom: 18 }}><ShieldCheck size={16} /><div><strong>حدود الأمان</strong><p>لن نستنتج صفات دينية حساسة، ولن نقدّم حكمًا نهائيًا في مسألة تحتاج إلى متخصص.</p></div></div>
+         <div className="notice notice-warn" style={{ marginBottom: 18 }}><ShieldCheck size={16} /><div><strong>حدود الأمان</strong><p>لن نستنتج صفات دينية حساسة، ولن نقدّم حكمًا نهائيًا في مسألة تحتاج إلى متخصص. كل مقتطف يظهر هنا مرتبط بمرجع وتاريخ استرجاع.</p></div></div>
         <button className="button button-primary" type="submit" disabled={isAnalyzing} data-testid="button-run-analysis" style={{ width: '100%' }}>{isAnalyzing ? <><RefreshCcw size={15} className="animate-spin" /> جارٍ تحليل المطالبة...</> : <><Sparkles size={15} /> ابدأ تحليلًا ذكيًا</>}</button>
-        <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: 11, lineHeight: 1.7, textAlign: 'center', margin: '12px 0 0' }}>عند تعذر اتصال الذكاء الاصطناعي يُستخدم فرز محلي معلن، لا يثبت صحة النص ولا ينتج إحالات موثقة. الحفظ في هذا المتصفح فقط. لا تدخلي معلومات شخصية أو سرية.</p>
+         <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: 11, lineHeight: 1.7, textAlign: 'center', margin: '12px 0 0' }}>يتطلب المسار الرسمي اتصال الذكاء الاصطناعي؛ عند تعطله يتوقف الطلب بدل عرض نتيجة محلية مضللة. النتائج تحفظ في مساحة الفريق المشتركة.</p>
       </form>
       <div className="card analysis-panel" data-testid="panel-analysis-result">
         {isAnalyzing && <div className="analysis-loading" data-testid="state-analysis-loading"><div className="skeleton" style={{ width: '31%' }} /><div className="skeleton large" /><div className="skeleton" style={{ width: '75%' }} /><div className="skeleton" style={{ width: '55%' }} /><div className="skeleton" style={{ marginTop: 22 }} /><div className="skeleton" style={{ width: '86%' }} /></div>}
@@ -417,7 +439,8 @@ function CheckPage({ cases, setCases, sources, selectedId, go, addActivity, noti
           {result.status === 'needs_review' && <div className="notice notice-warn"><AlertCircle size={17} /><div><strong>تحتاج هذه المطالبة إلى عين بشرية</strong><p>المسائل الحديثة والفتاوى لا تُعتمد تلقائيًا. أوصي بعرضها على مختص مع حفظ هذه الملاحظة.</p></div></div>}
           {result.status === 'insufficient' && <div className="notice notice-danger"><XCircle size={17} /><div><strong>توقّف المسار: الأدلة غير كافية</strong><p>لا توجد إحالة محددة يمكن التحقق منها. لا تعمّمي الحكم ولا تستنتجي سمة دينية حساسة.</p></div></div>}
            <div style={{ marginTop: 20 }}><div className="panel-heading" style={{ marginBottom: 7 }}><h3 style={{ fontSize: 13 }}>مسار الدليل</h3><span>{result.sources.length ? 'فهارس مرتبطة للتحقق' : 'بانتظار إحالة'}</span></div>{resultSources.length ? <div className="source-list">{resultSources.map((source) => <div className="source-card" key={source.id}><div className="source-accent" /><div><h4>{source.title}</h4><p><span className="source-type">{source.type}</span> · {source.authority} · رابط فهرس عام لا يثبت المطالبة وحده</p></div><a className="mini-button" data-testid={`button-open-source-${source.id}`} href={source.url} target="_blank" rel="noreferrer" onClick={() => notify(`تم فتح فهرس المصدر: ${source.title}`)} aria-label={`فتح ${source.title}`}><ArrowUpRight size={14} /></a></div>)}</div> : <div className="empty-state"><h3>لا نملك إحالة بعد</h3><p>أضيفي نصًا يحوي اسم مصدر أو رقم آية محددًا، أو أحيله إلى مختص إذا كان سؤالًا معاصرًا.</p></div>}</div>
-          {result.summary && <div className="notice notice-info" style={{ marginTop: 16 }}><Info size={16} /><div><strong>ملخص التحليل</strong><p>{result.summary}</p></div></div>}
+           {result.summary && <div className="notice notice-info" style={{ marginTop: 16 }}><Info size={16} /><div><strong>ملخص التحليل</strong><p>{result.summary}</p></div></div>}
+           {result.evidence?.length ? <div style={{ marginTop: 18 }}><div className="panel-heading" style={{ marginBottom: 7 }}><h3 style={{ fontSize: 13 }}>مقتطفات مسترجعة</h3><span>مرجع قابل للفحص</span></div><div className="evidence-snippet-list">{result.evidence.map((item) => <div className="evidence-snippet" key={item.id}><div className="evidence-snippet-head"><strong>{item.reference}</strong><a href={item.url} target="_blank" rel="noreferrer" className="text-link">فتح المصدر <ArrowUpRight size={12} /></a></div><p>{item.excerpt}</p><small>{item.sourceTitle} · {item.edition} · استرجاع {formatCaseDate(item.retrievedAt)}</small></div>)}</div></div> : null}
           {result.sourceNotes?.length ? <div className="source-notes"><strong>ملاحظات الإسناد</strong><ul>{result.sourceNotes.map((note) => <li key={note}>{note}</li>)}</ul></div> : null}
           {result.modeNote && <div className="notice notice-warn" style={{ marginTop: 14 }}><AlertCircle size={16} /><div><strong>{result.analysisMode === 'local' ? 'وضع العرض المحلي' : 'تحليل الذكاء الاصطناعي'}</strong><p>{result.modeNote}</p></div></div>}
           <div className="notice notice-info review-cta"><UserRound size={16} /><div><strong>الخطوة البشرية المقترحة</strong><p>{result.reviewerNote}</p></div></div>
@@ -467,8 +490,8 @@ function SettingsPage({ settings, setSettings, saveSettings }: { settings: { spe
     <div className="settings-layout"><div className="card settings-nav"><button className={`settings-tab ${tab === 'safety' ? 'active' : ''}`} data-testid="button-settings-safety" onClick={() => setTab('safety')}><ShieldCheck size={16} /> بوابة الأمان</button><button className={`settings-tab ${tab === 'workspace' ? 'active' : ''}`} data-testid="button-settings-workspace" onClick={() => setTab('workspace')}><PanelRight size={16} /> مساحة العمل</button><button className={`settings-tab ${tab === 'team' ? 'active' : ''}`} data-testid="button-settings-team" onClick={() => setTab('team')}><UsersRound size={16} /> أعضاء الفريق</button></div>
       <div className="card settings-panel">
         {tab === 'safety' && <><h3>بوابة الأمان</h3><p>قواعد تضمن أن تكون النتيجة أداة أدلة، لا بديلًا عن أهل الاختصاص.</p><div className="setting-row"><div><strong>إحالة المسائل الحديثة لمتخصص</strong><p>توجيه الأسئلة المعاصرة والفتاوى إلى قائمة المراجعة دائمًا.</p></div><button className={`switch ${settings.specialistGate ? 'on' : ''}`} aria-label="تبديل إحالة المسائل الحديثة" data-testid="switch-specialist-gate" onClick={() => toggle('specialistGate')} /></div><div className="setting-row"><div><strong>إيقاف الاستنتاجات الحساسة</strong><p>عدم استنتاج الانتماء أو التدين أو أي سمة حساسة من نص غير كافٍ.</p></div><button className={`switch ${settings.sensitiveClaims ? 'on' : ''}`} aria-label="تبديل الاستنتاجات الحساسة" data-testid="switch-sensitive-claims" onClick={() => toggle('sensitiveClaims')} /></div><div className="setting-row"><div><strong>لا نشر دون مصدر من المكتبة</strong><p>لا تظهر الحالة «مدعوم» إلا مع إحالة مصدر محفوظ ومراجع.</p></div><button className={`switch ${settings.sourcePolicy ? 'on' : ''}`} aria-label="تبديل سياسة المصدر" data-testid="switch-source-policy" onClick={() => toggle('sourcePolicy')} /></div><div className="notice notice-warn" style={{ marginTop: 20 }}><AlertCircle size={16} /><div><strong>تنبيه تشغيلي</strong><p>هذه القواعد محلية لهذا العرض. في الإنتاج، يجب ربطها بسياسة صلاحيات ومراجعة فعلية.</p></div></div></>}
-        {tab === 'workspace' && <><h3>مساحة العمل</h3><p>هذا العرض محلي في المتصفح ولا يوفّر مساحة فريق مشتركة.</p><div className="setting-row"><div><strong>اللغة الأساسية</strong><p>العربية — واجهة RTL</p></div><span className="tag"><Languages size={12} /> العربية</span></div><div className="notice notice-warn"><AlertCircle size={16} /><div><strong>حدود الحفظ</strong><p>الحالات والإعدادات محفوظة في هذا المتصفح فقط، وليست نسخة احتياطية أو سجل تدقيق دائمًا.</p></div></div></>}
-        {tab === 'team' && <div className="empty-state"><UsersRound size={24} /><h3>لا يوجد فريق متصل</h3><p>لم تتم إضافة مصادقة أو قاعدة بيانات، لذلك لا نعرض هويات أو صلاحيات افتراضية.</p></div>}
+         {tab === 'workspace' && <><h3>مساحة العمل</h3><p>النتائج محفوظة في قاعدة بيانات مساحة الفريق وتظهر بعد إعادة فتح التطبيق.</p><div className="setting-row"><div><strong>اللغة الأساسية</strong><p>العربية — واجهة RTL</p></div><span className="tag"><Languages size={12} /> العربية</span></div><div className="notice notice-info"><CheckCircle2 size={16} /><div><strong>حفظ دائم</strong><p>الحالات والقرارات لا تعتمد على localStorage؛ تُحفظ على الخادم ليراها أعضاء مساحة العمل.</p></div></div></>}
+         {tab === 'team' && <div className="empty-state"><UsersRound size={24} /><h3>مساحة الفريق المشتركة</h3><p>الحالات والقرارات مشتركة في مساحة العمل الحالية. ستضاف المصادقة وصلاحيات الأعضاء في مرحلة تشغيل لاحقة.</p></div>}
       </div>
     </div>
   </div>;
@@ -486,29 +509,23 @@ function AppContent() {
   const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const storedCases = JSON.parse(localStorage.getItem('miyar-cases') || '[]') as EvidenceCase[];
-      const migrated = storedCases
-        .filter((item) => item && typeof item.id === 'string')
-        .map((item) => ({
-          ...item,
-          isSample: item.isSample || caseSeed.some((sample) => sample.id === item.id),
-          status: item.analysisMode === 'local' && item.status === 'supported' && !item.reviewedAt ? 'needs_review' as const : item.status,
-          reviewerNote: item.analysisMode === 'local' && item.status === 'supported' && !item.reviewedAt
-            ? 'صُححت نتيجة محلية قديمة: الفرز المحلي لا يثبت الادعاء وتلزم مراجعة بشرية.'
-            : item.reviewerNote,
-          reviewedBy: undefined,
-        }));
-      const actual = migrated.filter((item) => !item.isSample);
-      setCases([...actual, ...caseSeed]);
-      setActivities((JSON.parse(localStorage.getItem('miyar-activities') || '[]') as Activity[]).filter((item) => !['a1', 'a2', 'a3', 'a4'].includes(item.id)));
-      setSavedIds(JSON.parse(localStorage.getItem('miyar-saved-sources') || '[]') as string[]);
-      const storedSettings = JSON.parse(localStorage.getItem('miyar-settings') || 'null') as typeof settings | null;
-      if (storedSettings) setSettings(storedSettings);
-      setStorageReady(true);
-    } catch {
-      setStorageError('تعذر قراءة البيانات المحلية. تُعرض الآن الحالات النموذجية فقط، ولم يتم تجاهل الخطأ.');
-    }
+    void (async () => {
+      try {
+        const response = await fetch('/api/cases');
+        if (!response.ok) throw new Error('تعذر تحميل سجل الفريق من الخادم.');
+        const payload = await response.json() as { cases?: EvidenceCase[] };
+        setCases([...(payload.cases ?? []), ...caseSeed]);
+        const storedCases = JSON.parse(localStorage.getItem('miyar-cases') || '[]') as EvidenceCase[];
+        if (storedCases.length) setStorageError('تم تجاهل النسخة المحلية القديمة لصالح سجل الفريق المحفوظ على الخادم.');
+        setActivities((JSON.parse(localStorage.getItem('miyar-activities') || '[]') as Activity[]).filter((item) => !['a1', 'a2', 'a3', 'a4'].includes(item.id)));
+        setSavedIds(JSON.parse(localStorage.getItem('miyar-saved-sources') || '[]') as string[]);
+        const storedSettings = JSON.parse(localStorage.getItem('miyar-settings') || 'null') as typeof settings | null;
+        if (storedSettings) setSettings(storedSettings);
+        setStorageReady(true);
+      } catch (error) {
+        setStorageError(error instanceof Error ? error.message : 'تعذر تحميل سجل الفريق من الخادم.');
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -525,17 +542,23 @@ function AppContent() {
       return false;
     }
   };
-  useEffect(() => { if (storageReady) persist('miyar-cases', cases.filter((item) => !item.isSample)); }, [cases, storageReady]);
   useEffect(() => { if (storageReady) persist('miyar-activities', activities); }, [activities, storageReady]);
   useEffect(() => { if (storageReady) persist('miyar-saved-sources', savedIds); }, [savedIds, storageReady]);
 
   const notify = (message: string) => setToast(message);
   const addActivity = (item: Activity) => setActivities((previous) => [item, ...previous].slice(0, 6));
   const go = (path: string) => setLocation(path);
-  const onDecision = (id: string, status: CaseStatus) => {
-    setCases((previous) => previous.map((item) => item.id === id ? { ...item, status, reviewedAt: new Date().toISOString(), reviewedBy: undefined, reviewerNote: status === 'supported' ? 'قرار يدوي تجريبي من مستخدم هذا المتصفح، وليس تحققًا موثقًا أو اعتمادًا من جهة مختصة.' : 'لم تعتمد يدويًا: الإحالة لا تكفي لإثبات المطالبة.' } : item));
-    addActivity({ id: `a-${Date.now()}`, text: status === 'supported' ? 'اعتمدت مراجعة بشرية مطالبة كانت معلّقة' : 'أوقفت المراجعة نشر مطالبة لعدم كفاية الدليل', time: new Date().toISOString(), tone: status === 'supported' ? 'success' : 'warning' });
-    notify(status === 'supported' ? 'تم اعتماد الحالة وإضافة أثر المراجع.' : 'تم رفض الاعتماد ووضع الحالة كأدلة غير كافية.');
+  const onDecision = async (id: string, status: CaseStatus) => {
+    try {
+      const response = await fetch(`/api/cases/${encodeURIComponent(id)}/decision`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+      const updated = await response.json() as EvidenceCase & { error?: string };
+      if (!response.ok) throw new Error(updated.error || 'تعذر حفظ القرار.');
+      setCases((previous) => previous.map((item) => item.id === id ? { ...item, ...updated } : item));
+      addActivity({ id: `a-${Date.now()}`, text: status === 'supported' ? 'اعتمدت مراجعة بشرية مطالبة في مساحة الفريق' : 'أوقفت المراجعة نشر مطالبة لعدم كفاية الدليل', time: new Date().toISOString(), tone: status === 'supported' ? 'success' : 'warning' });
+      notify(status === 'supported' ? 'تم حفظ القرار في مساحة الفريق.' : 'تم حفظ رفض الاعتماد في مساحة الفريق.');
+    } catch (decisionError) {
+      notify(decisionError instanceof Error ? decisionError.message : 'تعذر حفظ القرار.');
+    }
   };
   const toggleSaved = (id: string) => {
     setSavedIds((previous) => previous.includes(id) ? previous.filter((item) => item !== id) : [...previous, id]);
@@ -545,7 +568,7 @@ function AppContent() {
   const selectedId = location.startsWith('/check/') ? decodeURIComponent(location.slice('/check/'.length)) : undefined;
   const resolvedView: ViewName = selectedId ? 'check' : view;
   const saveSettings = () => {
-    if (persist('miyar-settings', settings)) notify('تم حفظ إعدادات مساحة العمل في هذا المتصفح.');
+    if (persist('miyar-settings', settings)) notify('تم حفظ إعدادات العرض؛ قرارات الحالات تحفظ في مساحة الفريق.');
   };
   return <AppShell currentPath={location} onMenu={() => undefined}>
     {storageError && <div className="notice notice-danger" role="alert" data-testid="error-local-storage" style={{ margin: '16px 24px 0' }}><AlertCircle size={17} /><div><strong>مشكلة في التخزين المحلي</strong><p>{storageError}</p></div></div>}

@@ -1,7 +1,7 @@
 kind = "web"
 previewPath = "/"
 title = "مِعيار — Islamic Evidence Verifier"
-description = "Arabic-first demonstration workspace for preliminary claim triage and human review. No retrieved-source verification; results and decisions are saved only in the current browser."
+description = "Arabic-first evidence triage workspace with managed AI analysis, traceable excerpts, shared PostgreSQL cases, and human review gates."
 version = "1.0.0"
 id = "artifacts/miyar-evidence-verifier"
 router = "path"
