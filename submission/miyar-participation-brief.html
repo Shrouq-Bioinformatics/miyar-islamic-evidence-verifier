@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>مِعيار — موجز المشاركة</title>
+  <style>
+    :root{--ink:#18322d;--muted:#5f6f6a;--green:#126b57;--mint:#dff3ea;--gold:#b88728;--sand:#f6f0e5;--red:#a74439;--line:#d9e1dd;--paper:#fff}
+    *{box-sizing:border-box}html{background:#e7ece9}body{margin:0;color:var(--ink);font-family:"Noto Naskh Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.7}
+    .sheet{width:210mm;min-height:297mm;margin:12mm auto;padding:18mm 17mm;background:var(--paper);box-shadow:0 12px 40px #17342b20;position:relative;overflow:hidden}
+    .sheet:before{content:"";position:absolute;inset:0 0 auto;height:5mm;background:linear-gradient(90deg,var(--gold),var(--green))}
+    .cover{display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(150deg,#fff 52%,#edf7f2)}
+    .kicker{display:inline-flex;align-items:center;gap:8px;color:var(--green);font:700 10pt Tahoma,Arial,sans-serif;letter-spacing:.03em}
+    .kicker:before{content:"";width:18mm;height:2px;background:var(--gold)}
+    h1{font-size:42pt;line-height:1.1;margin:25mm 0 2mm;color:var(--ink)}.subtitle{font-size:19pt;color:var(--green);margin:0;max-width:135mm}
+    .promise{margin-top:15mm;padding:8mm;border-right:4px solid var(--gold);background:#fff;font-size:15pt;max-width:150mm}
+    .truth{margin-top:9mm;padding:6mm 7mm;border:1px solid #e5c9c4;border-radius:4mm;background:#fff8f6;color:#70342d;font-size:11pt}
+    .cover-bottom{display:grid;grid-template-columns:1.2fr .8fr;gap:10mm;align-items:end}.meta{font:10pt Tahoma,Arial,sans-serif;color:var(--muted)}.seal{justify-self:end;width:39mm;height:39mm;border:1px solid var(--green);border-radius:50%;display:grid;place-items:center;text-align:center;color:var(--green);font:bold 9pt Tahoma}
+    h2{font-size:25pt;line-height:1.25;margin:6mm 0 8mm}h3{font-size:15pt;margin:7mm 0 2mm;color:var(--green)}h4{font-size:11pt;margin:4mm 0 1mm}p{margin:0 0 4mm}ul,ol{margin:2mm 0 5mm;padding-right:6mm}li{margin:1.5mm 0}
+    .section-no{font:700 9pt Tahoma,Arial;color:var(--gold);letter-spacing:.08em}.lead{font-size:14pt;color:#284b43;max-width:165mm}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6mm}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm}
+    .card{border:1px solid var(--line);border-radius:4mm;padding:6mm;background:#fff}.card.tint{background:var(--sand);border:0}.card.green{background:var(--mint);border:0}.card h3{margin-top:0}
+    .num{font:bold 20pt Tahoma;color:var(--gold)}.tag{display:inline-block;padding:1.2mm 3mm;border-radius:99px;background:var(--mint);color:var(--green);font:bold 8pt Tahoma;margin:0 0 3mm}
+    .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-top:7mm}.step{padding:5mm 4mm;border-top:3px solid var(--green);background:#f7faf8;font-size:9.5pt}.step b{display:block;color:var(--gold);font:700 9pt Tahoma;margin-bottom:2mm}
+    .warning{padding:5mm;border-right:4px solid var(--red);background:#fff5f3;color:#6f3932}.note{padding:4mm 5mm;background:var(--sand);border-radius:3mm}
+    table{width:100%;border-collapse:collapse;font-size:9.5pt;margin:5mm 0}th{background:var(--ink);color:#fff;text-align:right}th,td{padding:3mm;border:1px solid var(--line);vertical-align:top}
+    .status{display:flex;gap:3mm;align-items:flex-start;margin:2.5mm 0}.box{width:4.5mm;height:4.5mm;border:1.3px solid var(--green);border-radius:1mm;flex:none;margin-top:1.5mm}.done .box{background:var(--green);box-shadow:inset 0 0 0 1mm #fff}
+    .timeline{display:grid;grid-template-columns:25mm 1fr;gap:2mm 5mm}.time{font:bold 9pt Tahoma;color:var(--gold);padding-top:2mm}.line{border-bottom:1px solid var(--line);padding:1.5mm 0 3mm}.line b{color:var(--green)}
+    code{font-family:Consolas,monospace;direction:ltr;unicode-bidi:embed;background:#eef3f1;padding:.5mm 1.5mm;border-radius:1mm}pre{direction:ltr;text-align:left;white-space:pre-wrap;background:#132f29;color:#e9f5ef;padding:5mm;border-radius:3mm;font:8.5pt/1.7 Consolas,monospace}
+    .footer{position:absolute;bottom:8mm;left:17mm;right:17mm;display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:2mm;color:var(--muted);font:8pt Tahoma}.small{font-size:9pt;color:var(--muted)}.accent{color:var(--gold)}strong{color:var(--ink)}.compact h2{margin-bottom:5mm}.compact .status{margin:1.2mm 0}.compact .card{padding:4mm}.compact .card h3{margin-bottom:1mm}
+    @page{size:A4;margin:0}@media print{html{background:#fff}.sheet{width:210mm;height:297mm;min-height:297mm;margin:0;box-shadow:none;overflow:hidden;break-after:page}.sheet:last-child{break-after:auto}}@media(max-width:800px){.sheet{width:100%;min-height:auto;margin:0;padding:22mm 7vw}.grid2,.grid3,.flow,.cover-bottom{grid-template-columns:1fr}.footer{position:static;margin-top:12mm}}
+  </style>
+</head>
+<body>
+  <section class="sheet cover">
+    <div>
+      <div class="kicker">ملف مشاركة صادق وقابل للمراجعة</div>
+      <h1>مِعيار</h1>
+      <p class="subtitle">مساحة عربية للفرز الأولي للادعاءات الإسلامية قبل النشر</p>
+      <div class="promise">نجعل الدليل، وعدم اليقين، والقرار البشري مرئيّة — بدل إخفائها خلف إجابة واثقة.</div>
+      <div class="truth"><strong>الحالة الحالية:</strong> نموذج عرض محلي. مفتاح مزود الذكاء الاصطناعي مرفوض، ولا توجد منظومة استرجاع أو مطابقة نصوص؛ لذا لا ندّعي تحققًا علميًا أو جاهزية إنتاجية.</div>
+    </div>
+    <div class="cover-bottom">
+      <div class="meta"><strong>المسار الرابع</strong><br>أدوات المعرفة والتحقق لتمكين المعرّفين بالإسلام<br><br>موجز مشاركة • نسخة للطباعة والمراجعة</div>
+      <div class="seal">أداة أدلة<br>لا فتوى</div>
+    </div>
+    <div class="footer"><span>مِعيار — موجز المشاركة</span><span>01</span></div>
+  </section>
+
+  <section class="sheet">
+    <div class="section-no">01 / المشكلة والفرصة</div>
+    <h2>المشكلة ليست غياب الإجابة فقط؛<br><span class="accent">بل غياب أثر الدليل.</span></h2>
+    <p class="lead">تصل ادعاءات إلى فرق المحتوى بإحالات ناقصة، أو خلط بين النص والتفسير والرأي والفتوى. البحث اليدوي بطيء، بينما قد تمنح الأدوات العامة إجابة لا تكشف حدودها.</p>
+    <div class="grid3" style="margin-top:10mm">
+      <div class="card"><div class="num">01</div><h3>إحالة ناقصة</h3><p>اسم كتاب أو آية بلا نص مسترجع أو سياق أو نسخة.</p></div>
+      <div class="card"><div class="num">02</div><h3>خطر الثقة الزائفة</h3><p>صياغة واثقة قد تتحول سريعًا إلى مادة منشورة.</p></div>
+      <div class="card"><div class="num">03</div><h3>قرار غير قابل للتتبع</h3><p>لا يظهر لماذا توقف المحرر أو أحال المسألة إلى مختص.</p></div>
+    </div>
+    <h3>سؤال التصميم</h3>
+    <div class="note">كيف نسرّع الوصول إلى <strong>إحالة قابلة للتتبع</strong>، مع رفع جودة التوقف الآمن حين لا يكفي الدليل؟</div>
+    <h3>المستخدمون</h3>
+    <div class="grid2">
+      <div class="card tint"><span class="tag">أساسي</span><strong>محرر المحتوى الدعوي/التربوي</strong><p class="small">يحتاج قرارًا واضحًا قبل النشر.</p></div>
+      <div class="card tint"><span class="tag">حاسم</span><strong>المراجع المختص</strong><p class="small">يحتاج الادعاء والسياق وسبب الإحالة في مكان واحد.</p></div>
+    </div>
+    <div class="footer"><span>المسار الرابع • أدوات المعرفة والتحقق</span><span>02</span></div>
+  </section>
+
+  <section class="sheet">
+    <div class="section-no">02 / الحل والمنهجية</div>
+    <h2>القرار البشري هو نهاية المسار،<br>لا هامشًا حول النموذج.</h2>
+    <p class="lead">مِعيار واجهة عربية RTL تستقبل المطالبة كما وردت، وتفصل طبقات العمل كي لا يصبح ذكر المرجع مرادفًا لإثباته.</p>
+    <div class="flow">
+      <div class="step"><b>1 — الإدخال</b>الادعاء والسياق واللغة كما وصلت للفريق.</div>
+      <div class="step"><b>2 — الاسترجاع</b>نص موثق ومقطع وسياق. <strong>غير منفذ حاليًا.</strong></div>
+      <div class="step"><b>3 — الفرز</b>دعم أولي / مراجعة / أدلة غير كافية.</div>
+      <div class="step"><b>4 — القرار</b>مراجع بشري يعتمد أو يرفض قبل النشر.</div>
+    </div>
+    <div class="grid2" style="margin-top:9mm">
+      <div class="card green">
+        <h3>ما يعمل اليوم</h3>
+        <ul><li>لوحة وسجل حالات وغرفة مراجعة.</li><li>API للتحقق من المدخلات ومخرجات مقيدة.</li><li>قواعد محلية معلنة تتوقف أو تحيل.</li><li>مكتبة روابط وإعدادات أمان.</li><li>حفظ في متصفح الجهاز.</li></ul>
+      </div>
+      <div class="card">
+        <h3>كيف يعمل الوضع المحلي؟</h3>
+        <ol><li>يرصد أسماء مصادر أو ألفاظ مسائل معاصرة.</li><li>لا يجلب أي نص ولا يثبت النسبة.</li><li>لا يعيد حالة «مدعوم» ولا ثقة مقاسة.</li><li>ينتج إحالة بشرية أو «أدلة غير كافية».</li></ol>
+      </div>
+    </div>
+    <div class="warning" style="margin-top:7mm"><strong>حتى مسار المزود التجريبي ليس تحققًا.</strong> فهو يحلل الادعاء مع فهرس وصفي فقط، بلا retrieval أو اقتباسات مسترجعة. تصفية معرفات المصادر تقلل شكلًا من الهلوسة، لكنها لا تثبت صحة الإحالة.</div>
+    <div class="footer"><span>منهجية محافظة • الامتناع نتيجة صحيحة</span><span>03</span></div>
+  </section>
+
+  <section class="sheet">
+    <div class="section-no">03 / الحدود والخصوصية</div>
+    <h2>ما لا يفعله مِعيار الآن</h2>
+    <div class="grid2">
+      <div>
+        <h3>حدود تقنية</h3>
+        <ul><li>المفتاح الحالي مرفوض، ولم يُستبدل.</li><li>لا استرجاع أو مطابقة لنصوص المصادر.</li><li>لا مجموعة اختبار أو أرقام دقة موثقة.</li><li>رابط العرض العام متاح، لكن لا يوجد مستودع GitHub عام بعد.</li><li>الأرقام النموذجية في الواجهة ليست قياسات حقيقية.</li></ul>
+      </div>
+      <div>
+        <h3>حدود تشغيلية</h3>
+        <ul><li>لا تسجيل دخول أو أدوار أو صلاحيات فريق.</li><li>لا قاعدة بيانات لمسار المنتج أو سجل تدقيق مركزي.</li><li>لا مزامنة أو نسخ احتياطي للحالات.</li><li>لا سياسة احتفاظ أو حذف مركزي منفذة.</li><li>لا مراجعة شرعية/قانونية نهائية.</li></ul>
+      </div>
+    </div>
+    <h3>خريطة البيانات الحالية</h3>
+    <table>
+      <thead><tr><th>البيانات</th><th>المكان/الجهة</th><th>الملاحظة</th></tr></thead>
+      <tbody>
+        <tr><td>الحالات والأنشطة والمصادر المحفوظة</td><td><code>localStorage</code></td><td>على المتصفح نفسه؛ تمسح مع بيانات الموقع.</td></tr>
+        <tr><td>المطالبة والسياق واللغة</td><td>خادم API؛ وOpenAI عند مفتاح صالح</td><td>لا توجد شاشة موافقة تفصيلية حاليًا.</td></tr>
+        <tr><td>سجلات تشغيل HTTP</td><td>الخادم</td><td>مدة الاحتفاظ غير محددة.</td></tr>
+      </tbody>
+    </table>
+    <div class="warning"><strong>قاعدة العرض:</strong> استخدم بيانات عامة أو مصطنعة فقط. لا تدخل أسماء أشخاص، محادثات خاصة، معلومات صحية، أو أسرار. أي مستخدم لملف المتصفح نفسه قد يرى السجل المحلي.</div>
+    <h3>قبل الإنتاج</h3>
+    <p>موافقة واضحة قبل الإرسال الخارجي، تنقيح PII، تشفير، إدارة أسرار، أدوار وعزل فرق، مدد احتفاظ وحذف، سجل تدقيق، اتفاقية معالجة مع المزود، وخطة حوادث — إضافة إلى توثيق تراخيص المصادر ونسخها.</p>
+    <div class="footer"><span>خصوصية حسب الواقع، لا حسب الطموح</span><span>04</span></div>
+  </section>
+
+  <section class="sheet">
+    <div class="section-no">04 / بروتوكول التقييم</div>
+    <h2>كيف سنعرف أنه أفضل وأكثر أمانًا؟</h2>
+    <p class="lead">هذا بروتوكول مقترح <strong>لم يُنفذ بعد</strong>. لا توجد نتائج أداء يجوز الاستشهاد بها.</p>
+    <div class="grid2" style="margin-top:7mm">
+      <div class="card"><h3>مجموعة ذهبية</h3><p>120–200 حالة: آيات، أحاديث منسوبة، مسائل معاصرة، تعميمات بلا مصدر، وحالات مضللة. مراجعان مستقلان وثالث للحسم.</p></div>
+      <div class="card"><h3>اختبار أعمى</h3><p>ترتيب عشوائي، فصل الضبط والاختبار، ومقارنة بالبحث اليدوي المعتاد مع قياس الزمن والجودة.</p></div>
+    </div>
+    <h3>المؤشرات</h3>
+    <table>
+      <thead><tr><th>المؤشر</th><th>لماذا يهم؟</th></tr></thead>
+      <tbody>
+        <tr><td>دقة الإحالات النصية</td><td>هل المصدر والمقطع والسياق صحيحون فعلًا؟</td></tr>
+        <tr><td>استدعاء «يحتاج مراجعة»</td><td>هل التقط النظام الحالات الحساسة بدل تمريرها؟</td></tr>
+        <tr><td>الدعم الزائف والإحالات المختلقة</td><td>قياس الضرر الأخطر مباشرة.</td></tr>
+        <tr><td>معدل الامتناع</td><td>هل يتوقف عند غياب الدليل؟</td></tr>
+        <tr><td>الوسيط الزمني وCohen’s κ</td><td>الكفاءة واتساق التقييم البشري.</td></tr>
+      </tbody>
+    </table>
+    <h3>بوابة أمان مقترحة</h3>
+    <div class="grid3">
+      <div class="card green"><div class="num">0</div><p>إحالات مختلقة في مجموعة الاختبار</p></div>
+      <div class="card green"><div class="num">≥95%</div><p>استدعاء الحالات الحساسة</p></div>
+      <div class="card green"><div class="num">100%</div><p>مراجعة بشرية للفتاوى والمعاصر</p></div>
+    </div>
+    <p class="small" style="margin-top:5mm">هذه عتبات قرار مقترحة وليست نتائج. تشمل اختبارات الإساءة: حقن أوامر، اقتباس مبتور، أسماء متشابهة، لغات مختلطة، وبيانات شخصية.</p>
+    <div class="footer"><span>لا إعلان نجاح قبل قياس موثق</span><span>05</span></div>
+  </section>
+
+  <section class="sheet">
+    <div class="section-no">05 / إعادة الإنتاج</div>
+    <h2>بناء مطابق للـworkspace الحالي</h2>
+    <p>المتطلبات: Node.js 24 وpnpm. لا تضع أي مفتاح في الكود أو الأرشيف.</p>
+    <pre>pnpm install --frozen-lockfile
+pnpm run typecheck
+PORT=24752 BASE_PATH=/ \
+  pnpm --filter @workspace/miyar-evidence-verifier run build
+pnpm --filter @workspace/api-server run build</pre>
+    <h3>تشغيل الخدمات</h3>
+    <pre># API
+PORT=8080 pnpm --filter @workspace/api-server run dev
+
+# Web
+PORT=24752 BASE_PATH=/ \
+  pnpm --filter @workspace/miyar-evidence-verifier run dev</pre>
+    <div class="note"><strong>تفصيل مهم:</strong> الواجهة تستدعي <code>/api/verify</code> نسبيًا. إعداد Replit artifact router يجمع الواجهة وAPI على أصل واحد. خارج Replit يلزم reverse proxy يوجه <code>/api/*</code> إلى المنفذ 8080؛ تشغيل منفذين منفصلين وحده لا يربط المسار.</div>
+    <h3>حقائق النشر</h3>
+    <ul><li>إعداد Replit الحالي: autoscale، والـAPI يستخدم <code>PORT=8080</code>.</li><li>الواجهة تبنى إلى <code>artifacts/miyar-evidence-verifier/dist/public</code>.</li><li>لا يحتاج الوضع المحلي مفتاح AI أو <code>DATABASE_URL</code>.</li><li>وجود حزمة DB في workspace لا يعني أن المنتج الحالي يخزن فيها.</li><li>رابط العرض العام: <code>https://maayr-islamic-evidence-verifier.replit.app</code>؛ يلزم إعادة نشر آخر التغييرات ثم إعادة الاختبار.</li></ul>
+    <div class="footer"><span>أوامر قابلة للتكرار • ملف قفل مضمن</span><span>06</span></div>
+  </section>
+
+  <section class="sheet">
+    <div class="section-no">06 / سيناريو العرض</div>
+    <h2>90 ثانية: من المشكلة إلى التوقف الآمن</h2>
+    <div class="timeline">
+      <div class="time">00:00–00:15</div><div class="line"><b>المشكلة.</b> «إحالة ناقصة قد تتحول إلى مادة منشورة؛ مِعيار يفصل الدعم والمراجعة ونقص الدليل.»</div>
+      <div class="time">00:15–00:28</div><div class="line"><b>اللوحة.</b> اعرض سجل الحالات، جودة الإحالة، والخطوة البشرية.</div>
+      <div class="time">00:28–00:40</div><div class="line"><b>الإدخال.</b> اكتب: «ما حكم العملات الرقمية المعاصرة؟» وحدد السياق.</div>
+      <div class="time">00:40–00:55</div><div class="line"><b>النتيجة.</b> قرّب «تحتاج مراجعة» وشارة الوضع المحلي. وضح أنه لا يجلب نصًا ولا يقيس الثقة.</div>
+      <div class="time">00:55–01:10</div><div class="line"><b>القرار.</b> افتح غرفة المراجعة وبيّن أن الحفظ في هذا المتصفح فقط.</div>
+      <div class="time">01:10–01:23</div><div class="line"><b>المصادر والحدود.</b> الروابط ليست دليلًا مسترجعًا؛ المطلوب retrieval وصلاحيات وتقييم.</div>
+      <div class="time">01:23–01:30</div><div class="line"><b>الخاتمة.</b> «قيمة مِعيار اليوم هي التوقف الآمن؛ والخطوة التالية تحقق قابل للقياس.»</div>
+    </div>
+    <div class="warning" style="margin-top:8mm"><strong>إرشاد التسجيل:</strong> أبق شارة الوضع المحلي ظاهرة، واستخدم بيانات مصطنعة. لا تقل «تحقق بالذكاء الاصطناعي» أو «مصادر مؤكدة». مصدر العرض مكتمل في 16 شريحة؛ التصديران الموجودان يسبقان آخر تحسيناته لأن <code>exportSlides</code> يفشل. الفيديو النهائي <code>submission/miyar-demo.mp4</code> مدته 87 ثانية بنسبة 16:9.</div>
+    <p class="small" style="margin-top:5mm">النص الكامل: <code>docs/demo-script-90s.md</code></p>
+    <div class="footer"><span>سيناريو أمين للنسخة المتاحة</span><span>07</span></div>
+  </section>
+
+  <section class="sheet compact">
+    <div class="section-no">07 / الجاهزية والقرار</div>
+    <h2>مكتمل للتقييم الوثائقي،<br><span class="accent">غير جاهز لادعاء الإطلاق.</span></h2>
+    <div class="grid2">
+      <div>
+        <h3>مكتمل في الحزمة</h3>
+        <div class="status done"><span class="box"></span><span>المشكلة، الحل، والمسار الرابع</span></div>
+        <div class="status done"><span class="box"></span><span>المنهجية والقيود الصريحة</span></div>
+        <div class="status done"><span class="box"></span><span>بروتوكول التقييم والخصوصية</span></div>
+        <div class="status done"><span class="box"></span><span>أوامر البناء وإعادة الإنتاج</span></div>
+        <div class="status done"><span class="box"></span><span>نص عرض 90 ثانية بتوقيتات</span></div>
+        <div class="status done"><span class="box"></span><span>HTML وPDF وأرشيف مصدر منقح</span></div>
+        <div class="status done"><span class="box"></span><span>مصدر عرض 16 شريحة + تصديران سابقان محفوظان</span></div>
+      </div>
+      <div>
+        <h3>حواجز صريحة</h3>
+        <div class="status"><span class="box"></span><span><strong>محجوب:</strong> مفتاح AI صالح</span></div>
+        <div class="status"><span class="box"></span><span>retrieval ومطابقة اقتباسات</span></div>
+        <div class="status"><span class="box"></span><span>تقييم محكم ونتائج منشورة</span></div>
+        <div class="status"><span class="box"></span><span>مصادقة وصلاحيات وتخزين خادمي</span></div>
+        <div class="status"><span class="box"></span><span>إعادة نشر آخر التغييرات + مستودع GitHub عام</span></div>
+        <div class="status"><span class="box"></span><span>إصلاح exportSlides وإعادة تصدير العرض</span></div>
+        <div class="status done"><span class="box"></span><span>فيديو MP4 16:9 مدته 87 ثانية</span></div>
+        <div class="status"><span class="box"></span><span>مراجعة شرعية/قانونية وتجربة نشر نظيفة</span></div>
+      </div>
+    </div>
+    <div class="card tint" style="margin-top:9mm">
+      <h3>القرار</h3>
+      <p style="font-size:14pt">الحزمة الوثائقية قابلة للمراجعة والطباعة، والنموذج قابل للعرض المحلي ضمن حدوده. <strong>المشروع ليس جاهزًا بعد لادعاء تحقق فعلي أو إطلاق إنتاجي.</strong></p>
+    </div>
+    <div class="footer"><span>الشفافية جزء من المنتج</span><span>08</span></div>
+  </section>
+</body>
+</html>

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "مِعيار — Islamic Evidence Verifier"
+description = "Arabic-first demonstration workspace for preliminary claim triage and human review. No retrieved-source verification; results and decisions are saved only in the current browser."
+version = "1.0.0"
+id = "artifacts/miyar-evidence-verifier"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24752
+
+[services.development]
+run = "pnpm --filter @workspace/miyar-evidence-verifier run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/miyar-evidence-verifier", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/miyar-evidence-verifier/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24752"
+BASE_PATH = "/"
